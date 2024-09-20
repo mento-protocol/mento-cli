@@ -20,7 +20,7 @@ $ npm install -g @mento-protocol/mento-cli
 $ mento COMMAND
 running command...
 $ mento (--version)
-@mento-protocol/mento-cli/0.1.0 linux-x64 node-v18.20.4
+@mento-protocol/mento-cli/0.1.0 linux-x64 node-v22.9.0
 $ mento --help [COMMAND]
 USAGE
   $ mento COMMAND
