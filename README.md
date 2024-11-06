@@ -45,7 +45,7 @@ An NPM package for the CLI does not yet exist, at this time the easiest way to g
 # Ensure the app is built
 pnpm run build
 
-# Crete a global CLI alias
+# At the project root run this command to crete a global CLI alias
 pnpm link --global
 
 # Now you can run anywhere using

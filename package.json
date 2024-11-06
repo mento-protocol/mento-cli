@@ -10,7 +10,7 @@
   "types": "dist/index.d.ts",
   "repository": "mento-protocol/mento-cli",
   "bin": {
-    "mento": "./bin/run"
+    "mento": "./bin/run.js"
   },
   "publishConfig": {
     "access": "public"
