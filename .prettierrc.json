@@ -1,0 +1,10 @@
+{
+  "extends": "@oclif/prettier-config",
+  "arrowParens": "avoid",
+  "bracketSpacing": true,
+  "endOfLine": "auto",
+  "printWidth": 150,
+  "singleQuote": false,
+  "tabWidth": 2,
+  "trailingComma": "all"
+}

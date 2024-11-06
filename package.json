@@ -1,0 +1,77 @@
+{
+  "name": "@mento-protocol/mento-cli",
+  "description": "CLI for interacting with the Mento protocol",
+  "version": "0.1.0",
+  "author": "Mento Labs",
+  "bugs": "https://github.com/mento-protocol/mento-cli/issues",
+  "homepage": "https://github.com/mento-protocol/mento-cli",
+  "license": "MIT",
+  "main": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "repository": "mento-protocol/mento-cli",
+  "bin": {
+    "mento": "./bin/run"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "mento"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "build": "shx rm -rf dist && tsc -b && shx mv dist/index.js dist/index.mjs",
+    "lint": "eslint . --ext .ts",
+    "postpack": "shx rm -f oclif.manifest.json",
+    "posttest": "pnpm run lint",
+    "prepack": "oclif manifest && oclif readme",
+    "test": "mocha --forbid-only \"test/**/*.test.ts\"",
+    "version": "oclif readme && git add README.md"
+  },
+  "dependencies": {
+    "@mento-protocol/mento-sdk": "^1.0.1",
+    "@oclif/core": "^4",
+    "@oclif/plugin-help": "^6",
+    "@oclif/plugin-plugins": "^5",
+    "chalk": "^4.1.2",
+    "ethers": "^6.13.2",
+    "tty-table": "^4.2.3"
+  },
+  "devDependencies": {
+    "@oclif/prettier-config": "^0.2.1",
+    "@oclif/test": "^4",
+    "@types/chai": "^4",
+    "@types/mocha": "^10",
+    "@types/node": "^18",
+    "@types/sinon": "^17.0.3",
+    "chai": "^4",
+    "eslint": "^8",
+    "eslint-config-oclif": "^5",
+    "eslint-config-oclif-typescript": "^3",
+    "eslint-config-prettier": "^9",
+    "mocha": "^10",
+    "oclif": "^4",
+    "shx": "^0.3.3",
+    "sinon": "^19.0.2",
+    "ts-node": "^10",
+    "typescript": "^5"
+  },
+  "files": [
+    "/bin",
+    "/dist",
+    "/oclif.manifest.json"
+  ],
+  "oclif": {
+    "bin": "mento",
+    "dirname": "mento",
+    "commands": "./dist/commands",
+    "plugins": [
+      "@oclif/plugin-help",
+      "@oclif/plugin-plugins"
+    ],
+    "topicSeparator": " ",
+    "topics": {}
+  }
+}
