@@ -56,6 +56,8 @@ mento
 
 - [`mento pools list`](#mento-pools-list)
 - [`mento pools info POOLID`](#mento-pools-info-poolid)
+- [`mento config COMMAND`](#mento-config-command)
+- [`mento config set FLAG`](#mento-config-set-flag)
 
 ## `mento pools list`
 
@@ -93,6 +95,44 @@ EXAMPLES
   Get information for the cUSD/CELO pool on mainnet.
 
     $ mento pools info 0x3135b662c38265d0655177091f1b647b4fef511103d06c016efdf18b46930d2c
+```
+
+## `mento config COMMAND`
+
+### Get/set the configuration options for the CLI
+
+```
+USAGE
+  $ mento config COMMAND
+
+COMMANDS
+  config get  Get configuration options for the CLI
+  config set  Set configuration options for the CLI
+
+EXAMPLES
+
+  Get the configurable options
+    $ mento config get
+
+  Set a configurable options
+    $ mento config set FLAG
+```
+
+## `mento config set FLAG`
+
+### Set the value for the configuration option with the given flag
+
+```
+USAGE
+  $ mento config set -r <value>
+
+FLAGS
+  -r, --rpcUrl=<value>  (required) Specify the RPC URL to use
+
+EXAMPLES
+
+  Set the rpc url to use for the cli.
+    $ mento config get set -r https://alfajores-forno.celo-testnet.org
 ```
 
 ## <a name="license">©️ License</a>
