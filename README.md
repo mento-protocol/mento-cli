@@ -1,142 +1,254 @@
 # mento-cli
 
-CLI for interacting with the Mento protocol
+> CLI for the Mento Protocol — onchain FX infrastructure
 
-[![oclif](https://img.shields.io/badge/cli-oclif-brightgreen.svg)](https://oclif.io)
-[![Version](https://img.shields.io/npm/v/mento-cli.svg)](https://npmjs.org/package/mento-cli)
-[![Downloads/week](https://img.shields.io/npm/dw/mento-cli.svg)](https://npmjs.org/package/mento-cli)
+A command-line interface that wraps [@mento-protocol/mento-sdk](https://github.com/mento-protocol/mento-sdk) v3, bringing the full power of Mento's onchain FX protocol to your terminal. Inspect tokens, discover routes, get quotes, and execute swaps — all without leaving the command line.
 
-## 📋 Table of Contents
+## Overview
 
-1. 🔨 [Getting Started](#getting-started)
+**mento-cli** is a structured, ergonomic CLI built on Commander.js. It connects directly to the Celo blockchain (or any supported chain) via the Mento SDK, giving you real-time access to:
 
-2. 🚀 [Usage](#usage)
+- Protocol tokens and their on-chain supply
+- Trading routes between token pairs
+- Liquidity pool details and configuration
+- Live swap quotes with multi-route comparison
+- On-chain token swaps with slippage controls
+- Trading status and circuit-breaker limits
+- Protocol metadata and contract addresses
 
-3. ✨ [Misc commands](#commands)
-
-4. ©️ [License](#license)
-
-## <a name="getting-started">🔨 Getting Started</a>
-
-To get started working on this, you will need to have the following on your machine :
-
-![PNPM](https://img.shields.io/badge/-pnpm-green?style=for-the-badge&logoColor=white&logo=pnpm)
-
-![Typescript](https://img.shields.io/badge/-typescript-blue?style=for-the-badge&logoColor=white&logo=typescript)
-
-Then, run the following commands to build and use the cli locally:
+## Installation
 
 ```bash
-# Install dependencies
-pnpm install
+# Install globally
+npm install -g mento-cli
 
-# Build the project
-pnpm run build
-
-# Run CLI locally
-pnpm run dev
+# Or run directly without installing
+npx mento-cli
 ```
 
-## <a name="usage">🚀 Usage</a>
+Requires **Node.js >= 18**.
 
-An NPM package for the CLI does not yet exist, at this time the easiest way to get started is to create a global alias:
+## Quick Start
 
 ```bash
-# Ensure the app is built
-pnpm run build
+# Show all Mento stable tokens
+mento tokens
 
-# At the project root run this command to crete a global CLI alias
-pnpm link --global
+# Discover available trading routes
+mento routes
 
-# Now you can run anywhere using
-mento
+# Get a quote for swapping 100 USDm to CELO
+mento quote USDm CELO 100
+
+# Show protocol overview
+mento info
 ```
 
-## <a name="commands">✨ Commands</a>
+## Commands
 
-- [`mento pools list`](#mento-pools-list)
-- [`mento pools info POOLID`](#mento-pools-info-poolid)
-- [`mento config COMMAND`](#mento-config-command)
-- [`mento config set FLAG`](#mento-config-set-flag)
+### `mento tokens`
 
-## `mento pools list`
+List tokens known to the Mento Protocol.
 
-### List all pools with their basic information
-
-```
-USAGE
-  $ mento pools list [-p]
-
-FLAGS
-  -p, --pretty  Format output in a table and which includes token addresses.
-
-EXAMPLES
-  List all pools.
-
-    $ mento pools list
-
-  List all pools in an ugly tabe. Only looks pretty with a full screen terminal.
-
-    $ mento pools list -p
+```bash
+mento tokens                # List stable tokens (default)
+mento tokens --collateral   # List collateral assets
+mento tokens --all          # List both stable and collateral tokens
+mento tokens --json         # Output as JSON
 ```
 
-## `mento pools info POOLID`
+| Flag | Description |
+|---|---|
+| `--collateral` | Show collateral assets instead of stable tokens |
+| `--all` | Show all tokens (stable + collateral) |
 
-### Get information about a specific pool
+---
 
-```
-USAGE
-  $ mento pools info POOLID
+### `mento routes`
 
-ARGUMENTS
-  POOLID  ID of pool to be retrieved
+Discover trading routes between token pairs.
 
-EXAMPLES
-  Get information for the cUSD/CELO pool on mainnet.
-
-    $ mento pools info 0x3135b662c38265d0655177091f1b647b4fef511103d06c016efdf18b46930d2c
-```
-
-## `mento config COMMAND`
-
-### Get/set the configuration options for the CLI
-
-```
-USAGE
-  $ mento config COMMAND
-
-COMMANDS
-  config get  Get configuration options for the CLI
-  config set  Set configuration options for the CLI
-
-EXAMPLES
-
-  Get the configurable options
-    $ mento config get
-
-  Set a configurable options
-    $ mento config set FLAG
+```bash
+mento routes                        # List all available routes
+mento routes --from USDm --to CELO  # Filter routes by token pair
+mento routes --direct               # Show only direct (single-hop) routes
+mento routes --fresh                # Bypass cache, fetch live from chain
+mento routes --graph                # Show route graph visualization
 ```
 
-## `mento config set FLAG`
+| Flag | Description |
+|---|---|
+| `--direct` | Show only direct routes (no multi-hop) |
+| `--from <token>` | Filter by source token symbol |
+| `--to <token>` | Filter by destination token symbol |
+| `--fresh` | Skip cache and fetch routes from chain |
+| `--graph` | Display an ASCII route graph |
 
-### Set the value for the configuration option with the given flag
+---
 
+### `mento pools`
+
+Inspect liquidity pools and their configuration.
+
+```bash
+mento pools                        # List all pools
+mento pools --type VirtualPool     # Filter by pool type
+mento pools --details <address>    # Show detailed info for a specific pool
+mento pools --json                 # Output as JSON
 ```
-USAGE
-  $ mento config set -r <value>
 
-FLAGS
-  -r, --rpcUrl=<value>  (required) Specify the RPC URL to use
+| Flag | Description |
+|---|---|
+| `--type <type>` | Filter pools by type (e.g., `VirtualPool`) |
+| `--details <address>` | Show detailed configuration for a pool |
 
-EXAMPLES
+---
 
-  Set the rpc url to use for the cli.
-    $ mento config get set -r https://alfajores-forno.celo-testnet.org
+### `mento quote`
+
+Get swap quotes for a token pair and amount.
+
+```bash
+mento quote USDm CELO 100               # Quote 100 USDm → CELO
+mento quote CELO USDm 50                # Quote 50 CELO → USDm
+mento quote USDm CELO 100 --all-routes  # Compare quotes across all routes
+mento quote USDm CELO 100 --json        # Output as JSON
 ```
 
-## <a name="license">©️ License</a>
+**Positional arguments:** `<from> <to> <amount>`
 
-This project is licensed under the [MIT License](http://opensource.org/licenses/MIT).
+| Flag | Description |
+|---|---|
+| `--all-routes` | Show quotes from all available routes for comparison |
 
-If you want to contribute to this project, please read the [**contribution guide**](/CONTRIBUTING.MD)
+---
+
+### `mento swap`
+
+Execute a token swap on-chain.
+
+```bash
+mento swap USDm CELO 100 --private-key 0x...   # Swap with inline key
+mento swap USDm CELO 100 --keyfile ./key.txt    # Swap with keyfile
+mento swap USDm CELO 100 --dry-run              # Preview without sending tx
+mento swap USDm CELO 100 --slippage 1 --yes     # 1% slippage, skip prompt
+```
+
+**Positional arguments:** `<from> <to> <amount>`
+
+| Flag | Description | Default |
+|---|---|---|
+| `--private-key <key>` | Private key for transaction signing | — |
+| `--keyfile <path>` | Path to file containing private key | — |
+| `--slippage <percent>` | Maximum slippage tolerance (%) | `0.5` |
+| `--deadline <minutes>` | Transaction deadline in minutes | `5` |
+| `--dry-run` | Output CallParams as JSON without sending | — |
+| `-y, --yes` | Skip the confirmation prompt | — |
+
+---
+
+### `mento trading`
+
+Check trading status and limits.
+
+```bash
+mento trading status                # Check trading status for all routes
+mento trading status USDm CELO     # Check if a specific pair is tradable
+mento trading limits               # Show trading limits for all pools
+mento trading limits --json        # Output limits as JSON
+```
+
+**Subcommands:** `status`, `limits`
+
+---
+
+### `mento info`
+
+Show protocol overview and contract addresses.
+
+```bash
+mento info                          # Protocol overview (pools, routes, tokens)
+mento info --contracts              # List all known contract addresses
+mento info --chain celo-sepolia     # Show info for testnet
+mento info --json                   # Output as JSON
+```
+
+| Flag | Description |
+|---|---|
+| `--contracts` | List all known Mento contract addresses |
+
+---
+
+### `mento cache`
+
+Refresh cached protocol data from the blockchain.
+
+```bash
+mento cache routes    # Refresh the routes cache
+mento cache tokens    # Refresh the tokens cache
+```
+
+**Subcommands:** `routes`, `tokens`
+
+## Global Options
+
+These flags can be used with any command:
+
+| Option | Description | Default |
+|---|---|---|
+| `-c, --chain <name-or-id>` | Chain name (`celo`, `celo-sepolia`) or numeric chain ID | `celo` |
+| `--rpc <url>` | Custom RPC endpoint URL | Chain default |
+| `--json` | Output as JSON instead of formatted tables | `false` |
+| `-V, --version` | Print version | — |
+| `-h, --help` | Show help for a command | — |
+
+## Multi-Chain Support
+
+mento-cli supports multiple chains via the `--chain` flag. Pass a chain name or numeric chain ID:
+
+```bash
+# Celo mainnet (default)
+mento tokens
+
+# Celo Sepolia testnet
+mento tokens --chain celo-sepolia
+
+# By chain ID
+mento tokens --chain 44787
+
+# With a custom RPC endpoint
+mento info --chain celo --rpc https://my-rpc.example.com
+```
+
+The chain registry maps chain names to their chain IDs and default RPC endpoints. The SDK handles chain-specific contract addresses automatically.
+
+## Examples
+
+```bash
+# Full workflow: inspect → quote → swap
+mento tokens --all
+mento routes --from USDm --to CELO
+mento quote USDm CELO 100
+mento swap USDm CELO 100 --private-key 0x... --slippage 0.5
+
+# Pipe JSON output to jq for scripting
+mento tokens --json | jq '.[] | .symbol'
+mento quote USDm CELO 100 --json | jq '.amountOut'
+
+# Check if trading is active before swapping
+mento trading status USDm CELO
+
+# Refresh cached data if results seem stale
+mento cache routes
+mento cache tokens
+```
+
+## Links
+
+- **SDK**: [github.com/mento-protocol/mento-sdk](https://github.com/mento-protocol/mento-sdk)
+- **Protocol**: [mento.org](https://mento.org)
+- **PRD**: [docs/PRD.md](docs/PRD.md)
+
+## License
+
+MIT
