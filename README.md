@@ -20,11 +20,25 @@ A command-line interface that wraps [@mento-protocol/mento-sdk](https://github.c
 
 ```bash
 # Install globally
-npm install -g mento-cli
+npm install -g @mento-protocol/cli
 
 # Or run directly without installing
-npx mento-cli
+npx @mento-protocol/cli
 ```
+
+The package name is `@mento-protocol/cli`; the installed binary is `mento`.
+
+### Installing from source
+
+```bash
+git clone https://github.com/mento-protocol/mento-cli.git
+cd mento-cli
+npm install
+npm pack
+npm install -g ./mento-protocol-cli-*.tgz
+```
+
+Use `npm pack` rather than `npm install -g .` — Volta and some npm setups produce a broken symlink when linking a local package directly.
 
 Requires **Node.js >= 18**.
 
@@ -37,8 +51,8 @@ mento tokens
 # Discover available trading routes
 mento routes
 
-# Get a quote for swapping 100 USDm to CELO
-mento quote USDm CELO 100
+# Get a quote for swapping 100 USDm to USDC
+mento quote USDm USDC 100
 
 # Show protocol overview
 mento info
@@ -70,7 +84,7 @@ Discover trading routes between token pairs.
 
 ```bash
 mento routes                        # List all available routes
-mento routes --from USDm --to CELO  # Filter routes by token pair
+mento routes --from USDm --to USDC  # Filter routes by token pair
 mento routes --direct               # Show only direct (single-hop) routes
 mento routes --fresh                # Bypass cache, fetch live from chain
 mento routes --graph                # Show route graph visualization
@@ -109,10 +123,10 @@ mento pools --json                 # Output as JSON
 Get swap quotes for a token pair and amount.
 
 ```bash
-mento quote USDm CELO 100               # Quote 100 USDm → CELO
-mento quote CELO USDm 50                # Quote 50 CELO → USDm
-mento quote USDm CELO 100 --all-routes  # Compare quotes across all routes
-mento quote USDm CELO 100 --json        # Output as JSON
+mento quote USDm USDC 100               # Quote 100 USDm → USDC
+mento quote USDC USDm 50                # Quote 50 USDC → USDm
+mento quote USDm USDC 100 --all-routes  # Compare quotes across all routes
+mento quote USDm USDC 100 --json        # Output as JSON
 ```
 
 **Positional arguments:** `<from> <to> <amount>`
@@ -128,10 +142,10 @@ mento quote USDm CELO 100 --json        # Output as JSON
 Execute a token swap on-chain.
 
 ```bash
-mento swap USDm CELO 100 --private-key 0x...   # Swap with inline key
-mento swap USDm CELO 100 --keyfile ./key.txt    # Swap with keyfile
-mento swap USDm CELO 100 --dry-run              # Preview without sending tx
-mento swap USDm CELO 100 --slippage 1 --yes     # 1% slippage, skip prompt
+mento swap USDm USDC 100 --private-key 0x...   # Swap with inline key
+mento swap USDm USDC 100 --keyfile ./key.txt    # Swap with keyfile
+mento swap USDm USDC 100 --dry-run              # Preview without sending tx
+mento swap USDm USDC 100 --slippage 1 --yes     # 1% slippage, skip prompt
 ```
 
 **Positional arguments:** `<from> <to> <amount>`
@@ -153,7 +167,7 @@ Check trading status and limits.
 
 ```bash
 mento trading status                # Check trading status for all routes
-mento trading status USDm CELO     # Check if a specific pair is tradable
+mento trading status USDm USDC     # Check if a specific pair is tradable
 mento trading limits               # Show trading limits for all pools
 mento trading limits --json        # Output limits as JSON
 ```
@@ -227,16 +241,16 @@ The chain registry maps chain names to their chain IDs and default RPC endpoints
 ```bash
 # Full workflow: inspect → quote → swap
 mento tokens --all
-mento routes --from USDm --to CELO
-mento quote USDm CELO 100
-mento swap USDm CELO 100 --private-key 0x... --slippage 0.5
+mento routes --from USDm --to USDC
+mento quote USDm USDC 100
+mento swap USDm USDC 100 --private-key 0x... --slippage 0.5
 
 # Pipe JSON output to jq for scripting
 mento tokens --json | jq '.[] | .symbol'
-mento quote USDm CELO 100 --json | jq '.amountOut'
+mento quote USDm USDC 100 --json | jq '.amountOut'
 
 # Check if trading is active before swapping
-mento trading status USDm CELO
+mento trading status USDm USDC
 
 # Refresh cached data if results seem stale
 mento cache routes
@@ -247,7 +261,6 @@ mento cache tokens
 
 - **SDK**: [github.com/mento-protocol/mento-sdk](https://github.com/mento-protocol/mento-sdk)
 - **Protocol**: [mento.org](https://mento.org)
-- **PRD**: [docs/PRD.md](docs/PRD.md)
 
 ## License
 

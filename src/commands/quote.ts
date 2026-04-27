@@ -1,20 +1,13 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import { getMento, resolveChainId, type GlobalOptions } from '../lib/client.js';
-import { formatTokenAmount, output } from '../lib/format.js';
+import { formatTokenAmount, output, parseAmount } from '../lib/format.js';
 import { resolveToken } from '../lib/utils.js';
 import { handleError } from '../lib/errors.js';
 import type { Route } from '@mento-protocol/mento-sdk';
 
 interface QuoteOptions {
   allRoutes?: boolean;
-}
-
-function parseAmount(amountStr: string, decimals: number): bigint {
-  // Support decimal input like "1.5"
-  const [intPart, fracPart = ''] = amountStr.split('.');
-  const paddedFrac = fracPart.slice(0, decimals).padEnd(decimals, '0');
-  return BigInt(intPart) * BigInt(10 ** decimals) + BigInt(paddedFrac);
 }
 
 function calcEffectivePrice(amountIn: bigint, amountOut: bigint, decimalsIn: number, decimalsOut: number): string {
@@ -48,8 +41,10 @@ Examples:
         const jsonMode = globalOpts.json ?? false;
         const chainId = resolveChainId(globalOpts.chain);
 
-        const tokenIn = resolveToken(chainId, tokenInSymbol);
-        const tokenOut = resolveToken(chainId, tokenOutSymbol);
+        const [tokenIn, tokenOut] = await Promise.all([
+          resolveToken(mento, chainId, tokenInSymbol),
+          resolveToken(mento, chainId, tokenOutSymbol),
+        ]);
 
         if (!tokenIn) {
           console.error(chalk.red(`Error: Token not found: ${tokenInSymbol}`));

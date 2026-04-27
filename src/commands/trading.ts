@@ -2,14 +2,9 @@ import { Command } from 'commander';
 import chalk from 'chalk';
 import { getMento, resolveChainId, type GlobalOptions } from '../lib/client.js';
 import { formatAddress, output } from '../lib/format.js';
-import { resolveToken } from '../lib/utils.js';
+import { prefetchTokens, resolveTokenSync, tokenSymbolOrAddress } from '../lib/utils.js';
 import { handleError } from '../lib/errors.js';
 import type { Pool, TradingLimit, PoolTradabilityStatus } from '@mento-protocol/mento-sdk';
-
-function getTokenSymbol(chainId: number, address: string): string {
-  const token = resolveToken(chainId, address);
-  return token?.symbol ?? formatAddress(address);
-}
 
 function formatLimitValue(value: bigint, decimals: number): string {
   if (value === 0n) return '0';
@@ -35,9 +30,9 @@ function limitsToData(
   return {
     poolAddr: pool.poolAddr,
     token0: pool.token0,
-    token0Symbol: getTokenSymbol(chainId, pool.token0),
+    token0Symbol: tokenSymbolOrAddress(chainId, pool.token0),
     token1: pool.token1,
-    token1Symbol: getTokenSymbol(chainId, pool.token1),
+    token1Symbol: tokenSymbolOrAddress(chainId, pool.token1),
     poolType: pool.poolType,
     tradable: status.tradable,
     circuitBreakerOk: status.circuitBreakerOk,
@@ -45,7 +40,7 @@ function limitsToData(
     limitsOk: status.limitsOk,
     limits: status.limits.map((l) => ({
       asset: l.asset,
-      assetSymbol: getTokenSymbol(chainId, l.asset),
+      assetSymbol: tokenSymbolOrAddress(chainId, l.asset),
       maxIn: l.maxIn.toString(),
       maxOut: l.maxOut.toString(),
       until: l.until,
@@ -63,7 +58,7 @@ function formatLimitsStatus(ok: boolean): string {
 }
 
 function printLimitRow(limit: TradingLimit, chainId: number): void {
-  const symbol = getTokenSymbol(chainId, limit.asset);
+  const symbol = tokenSymbolOrAddress(chainId, limit.asset);
   const maxIn = formatLimitValue(limit.maxIn, limit.decimals);
   const maxOut = formatLimitValue(limit.maxOut, limit.decimals);
   const reset = formatResetTime(limit.until);
@@ -97,9 +92,9 @@ Examples:
         const chainId = resolveChainId(globalOpts.chain);
 
         if (tokenA && tokenB) {
-          // Check specific pair
-          const resolvedA = resolveToken(chainId, tokenA);
-          const resolvedB = resolveToken(chainId, tokenB);
+          await prefetchTokens(mento, chainId);
+          const resolvedA = resolveTokenSync(chainId, tokenA);
+          const resolvedB = resolveTokenSync(chainId, tokenB);
 
           if (!resolvedA) {
             console.error(chalk.red(`Error: Token not found: ${tokenA}`));
@@ -184,7 +179,10 @@ Examples:
         const jsonMode = globalOpts.json ?? false;
         const chainId = resolveChainId(globalOpts.chain);
 
-        const pools = await mento.pools.getPools();
+        const [, pools] = await Promise.all([
+          prefetchTokens(mento, chainId),
+          mento.pools.getPools(),
+        ]);
 
         if (!jsonMode) {
           console.log(chalk.bold('Trading Limits — All Pools'));
@@ -195,8 +193,8 @@ Examples:
 
         for (const pool of pools) {
           const status = await mento.trading.getPoolTradabilityStatus(pool);
-          const sym0 = getTokenSymbol(chainId, pool.token0);
-          const sym1 = getTokenSymbol(chainId, pool.token1);
+          const sym0 = tokenSymbolOrAddress(chainId, pool.token0);
+          const sym1 = tokenSymbolOrAddress(chainId, pool.token1);
 
           allData.push(limitsToData(pool, status, chainId));
 
