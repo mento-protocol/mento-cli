@@ -11,6 +11,16 @@ export function formatAddress(address: string, chars: number = 6): string {
 }
 
 /**
+ * Parse a human-readable decimal amount (e.g. "1.5") into a bigint scaled to
+ * the token's decimals. Excess fractional digits are truncated.
+ */
+export function parseAmount(amountStr: string, decimals: number): bigint {
+  const [intPart, fracPart = ''] = amountStr.split('.');
+  const paddedFrac = fracPart.slice(0, decimals).padEnd(decimals, '0');
+  return BigInt(intPart) * BigInt(10 ** decimals) + BigInt(paddedFrac);
+}
+
+/**
  * Format a token amount from a raw bigint/string value with the given decimals.
  * Returns a human-readable string with commas and specified decimal places.
  */

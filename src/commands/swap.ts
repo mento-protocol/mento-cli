@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import { getMento, resolveChainId, type GlobalOptions } from '../lib/client.js';
-import { formatTokenAmount } from '../lib/format.js';
+import { formatTokenAmount, parseAmount } from '../lib/format.js';
 import { resolveToken } from '../lib/utils.js';
 import { handleError } from '../lib/errors.js';
 import { createWallet, type WalletOptions } from '../lib/wallet.js';
@@ -12,12 +12,6 @@ interface SwapCommandOptions extends WalletOptions {
   deadline: string;
   dryRun?: boolean;
   yes?: boolean;
-}
-
-function parseAmount(amountStr: string, decimals: number): bigint {
-  const [intPart, fracPart = ''] = amountStr.split('.');
-  const paddedFrac = fracPart.slice(0, decimals).padEnd(decimals, '0');
-  return BigInt(intPart) * BigInt(10 ** decimals) + BigInt(paddedFrac);
 }
 
 function callParamsToJson(params: CallParams): Record<string, string> {
@@ -70,8 +64,10 @@ Examples:
         const jsonMode = globalOpts.json ?? false;
 
         // Resolve tokens
-        const tokenIn = resolveToken(chainId, tokenInSymbol);
-        const tokenOut = resolveToken(chainId, tokenOutSymbol);
+        const [tokenIn, tokenOut] = await Promise.all([
+          resolveToken(mento, chainId, tokenInSymbol),
+          resolveToken(mento, chainId, tokenOutSymbol),
+        ]);
 
         if (!tokenIn) {
           console.error(chalk.red(`Error: Token not found: ${tokenInSymbol}`));

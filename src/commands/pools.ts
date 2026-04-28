@@ -2,7 +2,7 @@ import { Command } from 'commander';
 import chalk from 'chalk';
 import { getMento, resolveChainId, type GlobalOptions } from '../lib/client.js';
 import { output, formatAddress } from '../lib/format.js';
-import { resolveToken } from '../lib/utils.js';
+import { prefetchTokens, tokenSymbolOrAddress } from '../lib/utils.js';
 import { handleError } from '../lib/errors.js';
 import type { Pool, PoolDetails, FPMMPoolDetails, VirtualPoolDetails } from '@mento-protocol/mento-sdk';
 
@@ -11,16 +11,11 @@ interface PoolsOptions {
   details?: string;
 }
 
-function getTokenSymbol(chainId: number, address: string): string {
-  const token = resolveToken(chainId, address);
-  return token?.symbol ?? formatAddress(address);
-}
-
 function poolToRow(pool: Pool, chainId: number): string[] {
   return [
     formatAddress(pool.poolAddr),
-    getTokenSymbol(chainId, pool.token0),
-    getTokenSymbol(chainId, pool.token1),
+    tokenSymbolOrAddress(chainId, pool.token0),
+    tokenSymbolOrAddress(chainId, pool.token1),
     pool.poolType,
   ];
 }
@@ -29,9 +24,9 @@ function poolToData(pool: Pool, chainId: number): Record<string, unknown> {
   return {
     poolAddr: pool.poolAddr,
     token0: pool.token0,
-    token0Symbol: getTokenSymbol(chainId, pool.token0),
+    token0Symbol: tokenSymbolOrAddress(chainId, pool.token0),
     token1: pool.token1,
-    token1Symbol: getTokenSymbol(chainId, pool.token1),
+    token1Symbol: tokenSymbolOrAddress(chainId, pool.token1),
     poolType: pool.poolType,
     factoryAddr: pool.factoryAddr,
     ...(pool.exchangeId ? { exchangeId: pool.exchangeId } : {}),
@@ -54,7 +49,7 @@ function formatFPMMDetails(details: FPMMPoolDetails): void {
     console.log(`  Price Diff:     ${details.pricing.priceDifferencePercent.toFixed(4)}%`);
     console.log(`  In Band:        ${details.rebalancing.inBand ?? 'N/A'}`);
   } else {
-    console.log(chalk.yellow(`Pricing unavailable: ${details.pricingUnavailableReason ?? 'unknown'}`));
+    console.log(chalk.yellow('Pricing unavailable (FX market may be closed)'));
   }
   console.log('');
 
@@ -108,7 +103,6 @@ function poolDetailsToData(details: PoolDetails): Record<string, unknown> {
             priceDifferencePercent: d.pricing.priceDifferencePercent,
           }
         : null,
-      pricingUnavailableReason: d.pricingUnavailableReason,
       fees: {
         lpFeePercent: d.fees.lpFeePercent,
         protocolFeePercent: d.fees.protocolFeePercent,
@@ -161,7 +155,6 @@ Examples:
         const chainId = resolveChainId(globalOpts.chain);
 
         if (options.details) {
-          // Show detailed info for a single pool
           const details = await mento.pools.getPoolDetails(options.details);
 
           if (jsonMode) {
@@ -178,7 +171,11 @@ Examples:
         }
 
         // List all pools (with optional type filter)
-        let pools = await mento.pools.getPools();
+        const [, allPools] = await Promise.all([
+          prefetchTokens(mento, chainId),
+          mento.pools.getPools(),
+        ]);
+        let pools = allPools;
 
         if (options.type) {
           const filter = options.type.toLowerCase();

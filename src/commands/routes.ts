@@ -2,7 +2,7 @@ import { Command } from 'commander';
 import chalk from 'chalk';
 import { getMento, resolveChainId, type GlobalOptions } from '../lib/client.js';
 import { output } from '../lib/format.js';
-import { resolveToken } from '../lib/utils.js';
+import { prefetchTokens, resolveToken, tokenSymbolOrAddress } from '../lib/utils.js';
 import { handleError } from '../lib/errors.js';
 import type { Route, RouteWithCost } from '@mento-protocol/mento-sdk';
 
@@ -34,15 +34,6 @@ function routeToData(route: Route | RouteWithCost): Record<string, unknown> {
     poolTypes: route.path.map((p) => p.poolType),
     path: route.path.map((p) => ({ poolAddr: p.poolAddr, poolType: p.poolType })),
   };
-}
-
-/**
- * Resolve the symbol for a token address using the chain's token registry.
- * Falls back to an abbreviated address if the token is not found.
- */
-function symbolForAddress(chainId: number, address: string): string {
-  const token = resolveToken(chainId, address);
-  return token ? token.symbol : `${address.slice(0, 6)}...`;
 }
 
 /**
@@ -91,7 +82,7 @@ function routeToEdges(
       // The next token in the hop is the one in this pool that isn't the current token
       const nextAddr =
         poolToken0 === currentAddr ? poolToken1 : poolToken0;
-      const nextSymbol = symbolForAddress(chainId, nextAddr);
+      const nextSymbol = tokenSymbolOrAddress(chainId, nextAddr);
 
       edges.push([currentSymbol, nextSymbol]);
 
@@ -156,7 +147,10 @@ Examples:
 
         // --graph: output Mermaid flowchart and exit
         if (options.graph) {
-          const routes = await mento.routes.getRoutes({ cached: !options.fresh });
+          const [, routes] = await Promise.all([
+            prefetchTokens(mento, chainId),
+            mento.routes.getRoutes({ cached: !options.fresh }),
+          ]);
           const mermaid = buildMermaidGraph([...routes], chainId);
           console.log(mermaid);
           return;
@@ -171,8 +165,10 @@ Examples:
             process.exit(1);
           }
 
-          const tokenIn = resolveToken(chainId, options.from);
-          const tokenOut = resolveToken(chainId, options.to);
+          const [tokenIn, tokenOut] = await Promise.all([
+            resolveToken(mento, chainId, options.from),
+            resolveToken(mento, chainId, options.to),
+          ]);
 
           if (!tokenIn) {
             console.error(chalk.red(`Error: Token not found: ${options.from}`));
